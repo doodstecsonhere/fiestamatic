@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { BARANGAYS, BarangayData } from "@/data/barangays";
 import { getOrCreateFiestaDate, getDaysUntil, getCountdownLabel } from "@/lib/fiesta-date";
-import { Search, MapPin, CalendarDays, Sparkles } from "lucide-react";
+import { Search, X, MapPin, CalendarDays, Sparkles } from "lucide-react";
 import { BarangayDrawer } from "@/components/BarangayDrawer";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -55,8 +55,19 @@ export default function Home() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             data-testid="input-search-barangay"
-            className="w-full bg-card border border-border rounded-full py-3.5 pl-11 pr-4 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm font-medium"
+            className="w-full bg-card border border-border rounded-full py-3.5 pl-11 pr-12 outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm font-medium"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              data-testid="button-clear-search"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
 
