@@ -8,8 +8,10 @@
 - Production branch during migration verification:
   `codex/cloudflare-zero-cost-migration`
 - Initial static deployment commit: `379b5d9`
+- Shared-board deployment commit: `ac72578`
 - Custom domain: none
-- Existing production database and binding before this change: none
+- Production D1 database: `fiestamatic-bayanihan` in APAC
+- Pages Function binding: `DB`
 - Verified on 2026-08-25 before shared-board work: home and search, direct
   `/map`, direct `/community`, and the device-only preview
 
@@ -49,14 +51,24 @@ storage allowance is exhausted; it must never switch to paid overages.
 ## Verification
 
 - Build and type-check pass.
+- Cloudflare production build and Functions compilation pass at `ac72578`.
 - Home, search, fiesta details, map, and community routes load directly.
 - Mobile layout and keyboard navigation receive a focused check.
 - Bayanihan displays the public-board and unverified-name notice.
-- Two isolated browser sessions can see one shared fictional test post.
-- The posting device can delete that post; another device cannot.
-- Reporting, automatic hiding, input validation, rate limiting, offline/failure
-  behavior, and 90-day content erasure receive focused checks.
+- A second isolated device credential saw a shared fictional post and did not
+  receive its ownership permission.
+- Unauthorized deletion returned `404`; owner deletion returned `204`.
+- Three independent fictional reports returned `200` and automatically hid the
+  reported post. The owner could then delete the hidden post.
+- All production rehearsal posts and their related report/moderation rows were
+  removed after verification; the remaining community post count was zero.
+- Input validation, duplicate/spam controls, dual rate limiting, and 90-day
+  content erasure are covered by source review and disposable-database tests.
 - No request requires `DATABASE_URL`, `SESSION_SECRET`, or a Replit connector.
+
+Cloudflare D1 Free provides seven days of point-in-time recovery. Because this
+database began empty and contains no migrated Replit data, no legacy database
+backup was imported or required for launch.
 
 ## Rollback
 
