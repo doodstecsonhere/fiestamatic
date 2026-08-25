@@ -30,4 +30,10 @@ pnpm run typecheck
 pnpm run build
 ```
 
-The barangay dataset is embedded in the frontend. The Bayanihan board requires a PostgreSQL database and a `DATABASE_URL` environment variable.
+The barangay dataset is embedded in the frontend. The portable zero-dollar
+deployment uses a device-local Bayanihan preview and requires no database or
+secrets. The legacy shared API remains in the repository for future redesign,
+but must not be exposed publicly without authentication and abuse protections.
+
+See [the Cloudflare deployment guide](docs/deployment/cloudflare-zero-dollar.md)
+and [the sanitized Replit inventory](docs/preservation/replit-inventory-2026-08-25.md).

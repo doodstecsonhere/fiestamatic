@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { useCreateCommunityPost, useDeleteCommunityPost } from "@workspace/api-client-react";
-import { MessageSquare, Users, Trash2, Plus, Users2, Coffee, Car, WifiOff } from "lucide-react";
+import { MessageSquare, Users, Trash2, Plus, Users2, Coffee, Car, WifiOff, Flag } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -11,7 +10,7 @@ import { BARANGAYS } from "@/data/barangays";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CommunityPost {
-  id: number;
+  id: string;
   author_name: string;
   post_type: "carpool" | "shared_table" | "general";
   barangay: string;
@@ -19,12 +18,40 @@ export interface CommunityPost {
   contact_info?: string | null;
   seats_available?: number | null;
   created_at: string;
+  owned?: boolean;
 }
 
 // ─── Local storage helpers ─────────────────────────────────────────────────────
 
 const STORAGE_KEY = "fiestamatic_bayanihan_posts";
+const OWNER_KEY = "fiestamatic_bayanihan_owner";
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function getOwnerToken() {
+  let token = localStorage.getItem(OWNER_KEY);
+  if (!token) {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    token = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    localStorage.setItem(OWNER_KEY, token);
+  }
+  return token;
+}
+
+async function communityRequest(path: string, init: RequestInit = {}) {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: {
+      "X-Bayanihan-Owner": getOwnerToken(),
+      ...init.headers,
+    },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({ error: "Request failed" }));
+    throw new Error(body.error || "Request failed");
+  }
+  return response;
+}
 
 function loadCached(): CommunityPost[] {
   try {
@@ -48,7 +75,7 @@ function saveToCache(posts: CommunityPost[]) {
 
 const MOCK_POSTS: CommunityPost[] = [
   {
-    id: -1,
+    id: "sample-1",
     author_name: "Maria Santos",
     post_type: "carpool",
     barangay: "Candau-ay",
@@ -58,7 +85,7 @@ const MOCK_POSTS: CommunityPost[] = [
     created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
   },
   {
-    id: -2,
+    id: "sample-2",
     author_name: "Tatay Romy",
     post_type: "shared_table",
     barangay: "Camanjac",
@@ -68,7 +95,7 @@ const MOCK_POSTS: CommunityPost[] = [
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
   },
   {
-    id: -3,
+    id: "sample-3",
     author_name: "Ate Liza",
     post_type: "general",
     barangay: "Bagacay",
@@ -104,8 +131,7 @@ function useBayanihanPosts() {
   // Fetch from server and merge into localStorage
   const syncFromServer = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/community/posts`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) throw new Error("bad response");
+      const res = await communityRequest("/api/community/posts");
       const serverPosts: CommunityPost[] = await res.json();
       setPosts(serverPosts);
       saveToCache(serverPosts);
@@ -140,7 +166,7 @@ function useBayanihanPosts() {
     });
   }, []);
 
-  const removePost = useCallback((id: number) => {
+  const removePost = useCallback((id: string) => {
     setPosts((prev) => {
       const next = prev.filter((p) => p.id !== id);
       saveToCache(next);
@@ -154,11 +180,11 @@ function useBayanihanPosts() {
 // ─── Post schema ───────────────────────────────────────────────────────────────
 
 const postSchema = z.object({
-  author_name: z.string().min(1, "Name is required").max(100),
+  author_name: z.string().min(2, "Name must be at least 2 characters").max(80),
   post_type: z.enum(["carpool", "shared_table", "general"]),
   barangay: z.string().min(1, "Barangay is required"),
-  message: z.string().min(1, "Message is required").max(500),
-  contact_info: z.string().max(200).optional(),
+  message: z.string().min(10, "Message must be at least 10 characters").max(500),
+  contact_info: z.string().max(120).optional(),
   seats_available: z.coerce.number().min(1).max(20).optional().or(z.literal("")),
 });
 
@@ -166,8 +192,8 @@ const postSchema = z.object({
 
 export default function Community() {
   const { posts, summary, isOffline, syncError, addPost, removePost } = useBayanihanPosts();
-  const deletePost = useDeleteCommunityPost();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [actionError, setActionError] = useState("");
 
   const getPostIcon = (type: string) => {
     switch (type) {
@@ -185,13 +211,30 @@ export default function Community() {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
-    // Optimistically remove from local state
-    removePost(id);
-    // Best-effort server delete (only for real IDs, not mock negatives)
-    if (id > 0) {
-      deletePost.mutate({ id });
+    try {
+      await communityRequest(`/api/community/posts/${encodeURIComponent(id)}`, { method: "DELETE" });
+      removePost(id);
+      setActionError("");
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not delete this post");
+    }
+  };
+
+  const handleReport = async (id: string) => {
+    const details = prompt("Briefly explain why this post should be reviewed. Do not include private information.");
+    if (details === null) return;
+    try {
+      await communityRequest(`/api/community/posts/${encodeURIComponent(id)}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "community_safety", details }),
+      });
+      alert("Report received. Posts are automatically hidden after three independent reports.");
+      setActionError("");
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not submit the report");
     }
   };
 
@@ -244,6 +287,13 @@ export default function Community() {
       </div>
 
       <div className="px-4 mt-6 space-y-4">
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
+          <p className="font-bold">Shared community board</p>
+          <p className="mt-1 text-muted-foreground">
+            Posts are public for up to 90 days. Display names are not verified. Only share contact details you are comfortable publishing.
+          </p>
+        </div>
+        {actionError && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm font-bold text-destructive">{actionError}</p>}
         {posts.length === 0 ? (
           <div className="text-center py-16 bg-card rounded-3xl border border-border mt-8 shadow-sm">
             <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
@@ -265,13 +315,25 @@ export default function Community() {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDelete(post.id)}
-                  data-testid={`button-delete-post-${post.id}`}
-                  className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleReport(post.id)}
+                    aria-label={`Report post in ${post.barangay}`}
+                    className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"
+                  >
+                    <Flag className="w-4 h-4" />
+                  </button>
+                  {post.owned && (
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      aria-label={`Delete your post in ${post.barangay}`}
+                      data-testid={`button-delete-post-${post.id}`}
+                      className="text-muted-foreground hover:text-destructive p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               <h3 className="font-display font-bold text-xl mb-1.5 text-foreground">{post.barangay}</h3>
@@ -319,8 +381,8 @@ export default function Community() {
 // ─── Create post form ──────────────────────────────────────────────────────────
 
 function CreatePostForm({ onSuccess }: { onSuccess: (post: CommunityPost) => void }) {
-  const createPost = useCreateCommunityPost();
-  const [offlinePosted, setOfflinePosted] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const form = useForm<z.infer<typeof postSchema>>({
     resolver: zodResolver(postSchema),
@@ -336,63 +398,30 @@ function CreatePostForm({ onSuccess }: { onSuccess: (post: CommunityPost) => voi
 
   const postType = form.watch("post_type");
 
-  const onSubmit = (values: z.infer<typeof postSchema>) => {
+  const onSubmit = async (values: z.infer<typeof postSchema>) => {
     const payload = {
       ...values,
       seats_available: values.seats_available ? Number(values.seats_available) : undefined,
       contact_info: values.contact_info || undefined,
     };
 
-    // Always create a local post immediately (offline-first)
-    const localPost: CommunityPost = {
-      id: Date.now(), // temporary local ID (positive, unique enough)
-      author_name: payload.author_name,
-      post_type: payload.post_type,
-      barangay: payload.barangay,
-      message: payload.message,
-      contact_info: payload.contact_info ?? null,
-      seats_available: payload.seats_available ?? null,
-      created_at: new Date().toISOString(),
-    };
-
-    // If online, try to persist to server; use server ID if it succeeds
-    if (navigator.onLine) {
-      createPost.mutate(
-        { data: payload },
-        {
-          onSuccess: (serverPost) => {
-            // Replace local ID with server's real ID
-            const confirmed: CommunityPost = { ...localPost, id: (serverPost as CommunityPost).id ?? localPost.id };
-            form.reset();
-            onSuccess(confirmed);
-          },
-          onError: () => {
-            // Server failed but we still save locally
-            form.reset();
-            onSuccess(localPost);
-          },
-        }
-      );
-    } else {
-      setOfflinePosted(true);
+    setIsPending(true);
+    setSubmitError("");
+    try {
+      const response = await communityRequest("/api/community/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, website: "" }),
+      });
+      const post = await response.json() as CommunityPost;
       form.reset();
-      setTimeout(() => {
-        onSuccess(localPost);
-      }, 800);
+      onSuccess(post);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Could not publish this post");
+    } finally {
+      setIsPending(false);
     }
   };
-
-  if (offlinePosted) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 gap-4">
-        <WifiOff className="w-10 h-10 text-muted-foreground" />
-        <p className="font-display font-bold text-lg text-foreground text-center">Saved locally!</p>
-        <p className="text-sm text-muted-foreground text-center leading-snug">
-          Your post is saved on this device. It will sync to the community board when you're back online.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-2 max-h-[70vh] overflow-y-auto px-1 pb-4 scrollbar-none">
@@ -481,11 +510,12 @@ function CreatePostForm({ onSuccess }: { onSuccess: (post: CommunityPost) => voi
       <button
         type="submit"
         data-testid="button-submit-post"
-        disabled={createPost.isPending}
+        disabled={isPending}
         className="w-full bg-primary text-primary-foreground rounded-xl p-4 font-bold mt-2 shadow-md hover-elevate transition-transform active:scale-[0.98] disabled:opacity-50 text-base"
       >
-        {createPost.isPending ? "Posting..." : "Post to Board"}
+        {isPending ? "Posting..." : "Post to Board"}
       </button>
+      {submitError && <p role="alert" className="text-sm font-bold text-destructive">{submitError}</p>}
     </form>
   );
 }
