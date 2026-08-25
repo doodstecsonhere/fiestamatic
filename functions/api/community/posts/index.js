@@ -6,7 +6,7 @@ export async function onRequestGet(context) {
   context.waitUntil(env.DB.batch([
     env.DB.prepare(`
       UPDATE community_posts
-      SET status = 'deleted', message = '', contact_info = NULL
+      SET status = 'deleted', message = '[content removed]', contact_info = NULL
       WHERE status != 'deleted' AND created_at <= datetime('now', '-90 days')
     `),
     env.DB.prepare(`

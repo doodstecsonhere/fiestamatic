@@ -15,5 +15,17 @@ test("Bayanihan migration creates the expected schema in a disposable database",
     INSERT INTO community_posts (id, owner_hash, author_name, post_type, barangay, message)
     VALUES ('bad', 'owner', 'A', 'general', 'Bagacay', 'too short')
   `).run());
+  db.prepare(`
+    INSERT INTO community_posts (id, owner_hash, author_name, post_type, barangay, message)
+    VALUES ('owned', 'owner', 'Test Neighbor', 'general', 'Bagacay', 'Temporary fictional message')
+  `).run();
+  db.prepare(`
+    UPDATE community_posts
+    SET status = 'deleted', message = '[content removed]', contact_info = NULL
+    WHERE id = 'owned'
+  `).run();
+  const deleted = db.prepare("SELECT status, message FROM community_posts WHERE id = 'owned'").get();
+  assert.equal(deleted.status, "deleted");
+  assert.equal(deleted.message, "[content removed]");
   db.close();
 });
