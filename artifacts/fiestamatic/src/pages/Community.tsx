@@ -25,6 +25,7 @@ export interface CommunityPost {
 
 const STORAGE_KEY = "fiestamatic_bayanihan_posts";
 const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const LOCAL_ONLY = import.meta.env.VITE_COMMUNITY_MODE === "local";
 
 function loadCached(): CommunityPost[] {
   try {
@@ -103,6 +104,11 @@ function useBayanihanPosts() {
 
   // Fetch from server and merge into localStorage
   const syncFromServer = useCallback(async () => {
+    if (LOCAL_ONLY) {
+      setSyncError(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/community/posts`, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) throw new Error("bad response");
@@ -190,7 +196,7 @@ export default function Community() {
     // Optimistically remove from local state
     removePost(id);
     // Best-effort server delete (only for real IDs, not mock negatives)
-    if (id > 0) {
+    if (!LOCAL_ONLY && id > 0) {
       deletePost.mutate({ id });
     }
   };
@@ -244,6 +250,14 @@ export default function Community() {
       </div>
 
       <div className="px-4 mt-6 space-y-4">
+        {LOCAL_ONLY && (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
+            <p className="font-bold">Device-only community preview</p>
+            <p className="mt-1 text-muted-foreground">
+              Posts are saved only in this browser and are not shared with other visitors.
+            </p>
+          </div>
+        )}
         {posts.length === 0 ? (
           <div className="text-center py-16 bg-card rounded-3xl border border-border mt-8 shadow-sm">
             <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
@@ -356,7 +370,7 @@ function CreatePostForm({ onSuccess }: { onSuccess: (post: CommunityPost) => voi
     };
 
     // If online, try to persist to server; use server ID if it succeeds
-    if (navigator.onLine) {
+    if (!LOCAL_ONLY && navigator.onLine) {
       createPost.mutate(
         { data: payload },
         {
@@ -388,7 +402,7 @@ function CreatePostForm({ onSuccess }: { onSuccess: (post: CommunityPost) => voi
         <WifiOff className="w-10 h-10 text-muted-foreground" />
         <p className="font-display font-bold text-lg text-foreground text-center">Saved locally!</p>
         <p className="text-sm text-muted-foreground text-center leading-snug">
-          Your post is saved on this device. It will sync to the community board when you're back online.
+          Your post remains in this browser and is not shared with other visitors.
         </p>
       </div>
     );
