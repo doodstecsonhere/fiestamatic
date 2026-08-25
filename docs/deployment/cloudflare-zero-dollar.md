@@ -1,5 +1,22 @@
 # Cloudflare zero-dollar deployment
 
+## Live deployment record
+
+- URL: `https://fiestamatic.pages.dev`
+- Provider product: Cloudflare Pages Free
+- Connected repository: `doodstecsonhere/fiestamatic`
+- Production branch during migration verification:
+  `codex/cloudflare-zero-cost-migration`
+- Initial deployed source commit: `379b5d9`
+- Custom domain: none
+- Database, Functions, storage bindings, and secrets: none
+- Verified on 2026-08-25: home and search, direct `/map`, direct `/community`,
+  device-local posting, and the device-only disclosure
+
+Cloudflare showed 11 of 100,000 account requests used on the audit date. The
+deployment uses static assets rather than Pages Functions, so it does not need
+the Workers request allowance for normal page delivery.
+
 ## Scope
 
 Fiestamatic is deployed as static assets. Fiesta discovery, maps, offline
