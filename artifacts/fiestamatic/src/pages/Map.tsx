@@ -26,11 +26,11 @@ const YELLOW_ICON = createPinIcon('#f5c518'); // Bright golden yellow — clearl
 const ONLINE_CENTER: L.LatLngExpression = [9.3068, 123.3054];
 const ONLINE_ZOOM = 13;
 
-// The landscape schematic is deliberately wider than the city marker extent so
-// a phone-sized viewport has useful east/west room to explore while offline.
+// The offline artwork and Leaflet use the same geographic bounds. This keeps
+// every schematic feature aligned with the real barangay coordinates.
 const OFFLINE_MAP_BOUNDS: L.LatLngBoundsLiteral = [
-  [9.145, 123.015],
-  [9.465, 123.595],
+  [9.235, 123.240],
+  [9.370, 123.350],
 ];
 
 const FIESTA_MARKER_BOUNDS = L.latLngBounds(
@@ -47,11 +47,13 @@ function OfflineViewport({ active }: { active: boolean }) {
       // `inside: true` chooses a cover zoom: the viewport fits inside the
       // schematic instead of letterboxing beyond it.
       const coverZoom = map.getBoundsZoom(bounds, true);
-      const markerZoom = map.getBoundsZoom(FIESTA_MARKER_BOUNDS, false, L.point(56, 160));
       map.options.maxBoundsViscosity = 1;
-      map.setMinZoom(Math.min(coverZoom, markerZoom));
+      map.setMinZoom(coverZoom);
+      map.fitBounds(FIESTA_MARKER_BOUNDS, {
+        padding: L.point(8, 96),
+        animate: false,
+      });
       map.setMaxBounds(bounds);
-      map.setView(FIESTA_MARKER_BOUNDS.getCenter(), markerZoom, { animate: false });
     };
 
     if (active) {
