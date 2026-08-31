@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-labelledby="title desc">
+  <title id="title">Offline Dumaguete barangay guide</title>
+  <desc id="desc">A schematic, non-navigational view of Dumaguete City, its coast, main corridors, and city center.</desc>
+  <defs>
+    <pattern id="grid" width="75" height="75" patternUnits="userSpaceOnUse">
+      <path d="M 75 0 L 0 0 0 75" fill="none" stroke="#dbcdb8" stroke-width="2" opacity="0.55"/>
+    </pattern>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbf4e7"/>
+      <stop offset="1" stop-color="#e7d8bb"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="900" height="900" fill="#b8dce8"/>
+  <path d="M0 0H715C735 85 718 160 747 245C770 315 735 370 760 455C782 530 750 610 770 690C790 766 770 830 790 900H0Z" fill="url(#land)"/>
+  <path d="M0 0H715C735 85 718 160 747 245C770 315 735 370 760 455C782 530 750 610 770 690C790 766 770 830 790 900H0Z" fill="url(#grid)"/>
+  <path d="M715 0C735 85 718 160 747 245C770 315 735 370 760 455C782 530 750 610 770 690C790 766 770 830 790 900" fill="none" stroke="#3e91a8" stroke-width="9"/>
+
+  <g fill="none" stroke-linecap="round">
+    <path d="M190 35C245 160 325 260 390 385C455 510 545 650 665 845" stroke="#b98f57" stroke-width="16" opacity="0.7"/>
+    <path d="M65 540C230 525 385 540 545 510C630 495 690 480 752 470" stroke="#c9a775" stroke-width="13" opacity="0.75"/>
+    <path d="M400 120C485 220 550 330 590 450C620 545 665 650 720 770" stroke="#c9a775" stroke-width="11" opacity="0.75"/>
+    <path d="M75 355C260 365 425 350 585 320C650 308 705 295 742 285" stroke="#79b6c8" stroke-width="8" opacity="0.8"/>
+  </g>
+
+  <g font-family="system-ui, sans-serif" fill="#523d28">
+    <text x="42" y="72" font-size="30" font-weight="800">DUMAGUETE CITY</text>
+    <text x="42" y="105" font-size="17">Offline barangay guide · schematic only</text>
+    <text x="775" y="450" font-size="22" font-weight="700" fill="#256b80" transform="rotate(90 775 450)">TAÑON STRAIT</text>
+    <text x="455" y="470" font-size="24" font-weight="800">CITY CENTER</text>
+    <text x="112" y="520" font-size="18" font-weight="700">WESTERN BARANGAYS</text>
+    <text x="500" y="235" font-size="18" font-weight="700">NORTHERN BARANGAYS</text>
+    <text x="500" y="720" font-size="18" font-weight="700">SOUTHERN BARANGAYS</text>
+    <text x="480" y="340" font-size="15" fill="#39798d">Banica River corridor</text>
+    <text x="185" y="760" font-size="15">Approximate corridors provide orientation.</text>
+    <text x="185" y="785" font-size="15">Use the interactive pins for barangay details.</text>
+  </g>
+
+  <g transform="translate(650 85)" font-family="system-ui, sans-serif" fill="#523d28">
+    <path d="M0 40L18 0L36 40Z" fill="#c41a1a"/>
+    <text x="15" y="59" text-anchor="middle" font-size="14" font-weight="800">N</text>
+  </g>
+</svg>
