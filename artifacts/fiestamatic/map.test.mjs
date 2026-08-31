@@ -42,7 +42,7 @@ test('restores the normal online map viewport without offline constraints', () =
 });
 
 test('keeps the map status clear of attribution on small screens', () => {
-  assert.match(mapSource, /bottom-\[112px\][^\n]*sm:bottom-\[84px\]/);
+  assert.match(mapSource, /bottom-\[96px\][^\n]*sm:bottom-\[84px\]/);
 });
 
 test('precaches the bundled fallback without service-worker caching OSM tiles', () => {
