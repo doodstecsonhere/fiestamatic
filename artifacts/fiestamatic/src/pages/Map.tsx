@@ -29,9 +29,13 @@ const ONLINE_ZOOM = 13;
 // The landscape schematic is deliberately wider than the city marker extent so
 // a phone-sized viewport has useful east/west room to explore while offline.
 const OFFLINE_MAP_BOUNDS: L.LatLngBoundsLiteral = [
-  [9.245, 123.195],
-  [9.365, 123.415],
+  [9.145, 123.015],
+  [9.465, 123.595],
 ];
+
+const FIESTA_MARKER_BOUNDS = L.latLngBounds(
+  BARANGAYS.map(({ latitude, longitude }) => [latitude, longitude] as L.LatLngTuple),
+);
 
 function OfflineViewport({ active }: { active: boolean }) {
   const map = useMap();
@@ -43,10 +47,11 @@ function OfflineViewport({ active }: { active: boolean }) {
       // `inside: true` chooses a cover zoom: the viewport fits inside the
       // schematic instead of letterboxing beyond it.
       const coverZoom = map.getBoundsZoom(bounds, true);
+      const markerZoom = map.getBoundsZoom(FIESTA_MARKER_BOUNDS, false, L.point(56, 160));
       map.options.maxBoundsViscosity = 1;
-      map.setMinZoom(coverZoom);
+      map.setMinZoom(Math.min(coverZoom, markerZoom));
       map.setMaxBounds(bounds);
-      map.setView(bounds.getCenter(), coverZoom, { animate: false });
+      map.setView(FIESTA_MARKER_BOUNDS.getCenter(), markerZoom, { animate: false });
     };
 
     if (active) {

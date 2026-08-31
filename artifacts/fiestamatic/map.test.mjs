@@ -24,9 +24,12 @@ test('uses a bundled map when offline or when online tiles fail', () => {
 test('keeps the enlarged offline schematic covering the viewport while panning', () => {
   assert.match(offlineMap, /viewBox="0 0 2400 1350"/);
   assert.match(offlineMap, /<rect width="2400" height="1350" fill="#b8dce8"/);
-  assert.match(mapSource, /\[9\.245, 123\.195\][\s\S]*\[9\.365, 123\.415\]/);
+  assert.match(mapSource, /\[9\.145, 123\.015\][\s\S]*\[9\.465, 123\.595\]/);
   assert.match(mapSource, /getBoundsZoom\(bounds, true\)/);
-  assert.match(mapSource, /setMinZoom\(coverZoom\)/);
+  assert.match(mapSource, /FIESTA_MARKER_BOUNDS/);
+  assert.match(mapSource, /getBoundsZoom\(FIESTA_MARKER_BOUNDS, false, L\.point\(56, 160\)\)/);
+  assert.match(mapSource, /setView\(FIESTA_MARKER_BOUNDS\.getCenter\(\), markerZoom/);
+  assert.match(mapSource, /setMinZoom\(Math\.min\(coverZoom, markerZoom\)\)/);
   assert.match(mapSource, /setMaxBounds\(bounds\)/);
   assert.match(mapSource, /maxBoundsViscosity = 1/);
 });
