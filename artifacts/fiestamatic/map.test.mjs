@@ -41,6 +41,10 @@ test('restores the normal online map viewport without offline constraints', () =
   assert.match(mapSource, /setView\(ONLINE_CENTER, ONLINE_ZOOM/);
 });
 
+test('keeps the map status clear of attribution on small screens', () => {
+  assert.match(mapSource, /bottom-\[112px\][^\n]*sm:bottom-\[84px\]/);
+});
+
 test('precaches the bundled fallback without service-worker caching OSM tiles', () => {
   assert.match(serviceWorker, /'\/offline-map\.svg'/);
   assert.doesNotMatch(serviceWorker, /TILE_CACHE|tileStrategy/);
