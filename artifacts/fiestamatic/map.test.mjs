@@ -21,11 +21,20 @@ test('uses a bundled map when offline or when online tiles fail', () => {
   assert.match(offlineMap, /Offline Dumaguete barangay guide/);
 });
 
-test('keeps the enlarged offline schematic covering the viewport while panning', () => {
-  assert.match(offlineMap, /viewBox="0 0 2400 1350"/);
-  assert.match(offlineMap, /<rect width="2400" height="1350" fill="#b8dce8"/);
-  assert.match(mapSource, /\[9\.245, 123\.195\][\s\S]*\[9\.365, 123\.415\]/);
+test('uses one geographic projection for the portrait schematic and Leaflet overlay', () => {
+  assert.match(offlineMap, /viewBox="0 0 1100 1350"/);
+  assert.match(offlineMap, /data-bounds="9\.235,123\.240,9\.370,123\.350"/);
+  assert.match(offlineMap, /x = \(longitude - 123\.240\) × 10000/);
+  assert.match(offlineMap, /y = \(9\.370 - latitude\) × 10000/);
+  assert.match(offlineMap, /© OpenStreetMap contributors/);
+  assert.match(mapSource, /\[9\.235, 123\.240\][\s\S]*\[9\.370, 123\.350\]/);
+});
+
+test('fits every marker with compact mobile padding while keeping the schematic bounded', () => {
+  assert.match(offlineMap, /<rect width="1100" height="1350" fill="#b8dce8"/);
   assert.match(mapSource, /getBoundsZoom\(bounds, true\)/);
+  assert.match(mapSource, /FIESTA_MARKER_BOUNDS/);
+  assert.match(mapSource, /fitBounds\(FIESTA_MARKER_BOUNDS, \{[\s\S]*padding: L\.point\(8, 96\)/);
   assert.match(mapSource, /setMinZoom\(coverZoom\)/);
   assert.match(mapSource, /setMaxBounds\(bounds\)/);
   assert.match(mapSource, /maxBoundsViscosity = 1/);
@@ -36,6 +45,10 @@ test('restores the normal online map viewport without offline constraints', () =
   assert.match(mapSource, /setMinZoom\(0\)/);
   assert.match(mapSource, /maxBoundsViscosity = 0/);
   assert.match(mapSource, /setView\(ONLINE_CENTER, ONLINE_ZOOM/);
+});
+
+test('keeps the map status clear of attribution on small screens', () => {
+  assert.match(mapSource, /bottom-\[96px\][^\n]*sm:bottom-\[84px\]/);
 });
 
 test('precaches the bundled fallback without service-worker caching OSM tiles', () => {

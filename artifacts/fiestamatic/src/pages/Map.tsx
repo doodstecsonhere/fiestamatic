@@ -26,12 +26,16 @@ const YELLOW_ICON = createPinIcon('#f5c518'); // Bright golden yellow — clearl
 const ONLINE_CENTER: L.LatLngExpression = [9.3068, 123.3054];
 const ONLINE_ZOOM = 13;
 
-// The landscape schematic is deliberately wider than the city marker extent so
-// a phone-sized viewport has useful east/west room to explore while offline.
+// The offline artwork and Leaflet use the same geographic bounds. This keeps
+// every schematic feature aligned with the real barangay coordinates.
 const OFFLINE_MAP_BOUNDS: L.LatLngBoundsLiteral = [
-  [9.245, 123.195],
-  [9.365, 123.415],
+  [9.235, 123.240],
+  [9.370, 123.350],
 ];
+
+const FIESTA_MARKER_BOUNDS = L.latLngBounds(
+  BARANGAYS.map(({ latitude, longitude }) => [latitude, longitude] as L.LatLngTuple),
+);
 
 function OfflineViewport({ active }: { active: boolean }) {
   const map = useMap();
@@ -45,8 +49,11 @@ function OfflineViewport({ active }: { active: boolean }) {
       const coverZoom = map.getBoundsZoom(bounds, true);
       map.options.maxBoundsViscosity = 1;
       map.setMinZoom(coverZoom);
+      map.fitBounds(FIESTA_MARKER_BOUNDS, {
+        padding: L.point(8, 96),
+        animate: false,
+      });
       map.setMaxBounds(bounds);
-      map.setView(bounds.getCenter(), coverZoom, { animate: false });
     };
 
     if (active) {
@@ -143,7 +150,7 @@ export default function MapPage() {
       <div className="flex-1 w-full z-0 relative pb-[72px]">
         <div
           aria-live="polite"
-          className="absolute bottom-[84px] left-3 z-[401] max-w-[calc(100%-1.5rem)] rounded-xl border border-border bg-background/95 px-3 py-2 text-xs font-medium text-foreground shadow-md backdrop-blur"
+          className="absolute bottom-[96px] left-3 z-[401] max-w-[calc(100%-1.5rem)] rounded-xl border border-border bg-background/95 px-3 py-2 text-xs font-medium leading-relaxed text-foreground shadow-md backdrop-blur sm:bottom-[84px]"
         >
           {useOfflineMap
             ? 'Offline barangay guide — markers and fiesta details remain available. This schematic is not for street navigation.'

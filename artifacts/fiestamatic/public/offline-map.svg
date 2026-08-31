@@ -1,52 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1350" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1350" data-bounds="9.235,123.240,9.370,123.350" role="img" aria-labelledby="title desc">
   <title id="title">Offline Dumaguete barangay guide</title>
-  <desc id="desc">A wide schematic, non-navigational view of Dumaguete City, its coast, main corridors, and barangay areas.</desc>
+  <desc id="desc">A geographically aligned schematic of Dumaguete City, its eastern coast, principal roads, and Banica River. Not for street navigation.</desc>
+  <metadata>
+    Geometry and orientation derived from OpenStreetMap, © OpenStreetMap contributors.
+    Projection: x = (longitude - 123.240) × 10000; y = (9.370 - latitude) × 10000.
+    Geographic bounds: southwest 9.235,123.240; northeast 9.370,123.350.
+  </metadata>
   <defs>
-    <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
-      <path d="M100 0H0V100" fill="none" stroke="#dbcdb8" stroke-width="2" opacity="0.55"/>
-    </pattern>
-    <pattern id="waves" width="90" height="45" patternUnits="userSpaceOnUse">
-      <path d="M0 24C15 10 30 10 45 24S75 38 90 24" fill="none" stroke="#8fc7d8" stroke-width="4" opacity="0.48"/>
-    </pattern>
     <linearGradient id="land" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fbf4e7"/>
-      <stop offset="1" stop-color="#e7d8bb"/>
+      <stop offset="0" stop-color="#fbf6e9"/>
+      <stop offset="1" stop-color="#e9ddc4"/>
     </linearGradient>
+    <pattern id="local-grid" width="74" height="74" patternUnits="userSpaceOnUse" patternTransform="rotate(8)">
+      <path d="M74 0H0V74" fill="none" stroke="#d5c9b4" stroke-width="2" opacity=".42"/>
+    </pattern>
+    <pattern id="waves" width="70" height="38" patternUnits="userSpaceOnUse">
+      <path d="M0 20c12-10 23-10 35 0s23 10 35 0" fill="none" stroke="#8fc7d8" stroke-width="3" opacity=".42"/>
+    </pattern>
   </defs>
 
-  <!-- Every pixel is painted so the bounded Leaflet overlay never contains an empty canvas. -->
-  <rect width="2400" height="1350" fill="#b8dce8"/>
-  <rect width="2400" height="1350" fill="url(#waves)"/>
-  <path d="M0 0H1920C1955 125 1925 245 1970 365C2010 475 1950 570 1990 690C2030 810 1970 925 2010 1040C2040 1140 2010 1245 2045 1350H0Z" fill="url(#land)"/>
-  <path d="M0 0H1920C1955 125 1925 245 1970 365C2010 475 1950 570 1990 690C2030 810 1970 925 2010 1040C2040 1140 2010 1245 2045 1350H0Z" fill="url(#grid)"/>
-  <path d="M1920 0C1955 125 1925 245 1970 365C2010 475 1950 570 1990 690C2030 810 1970 925 2010 1040C2040 1140 2010 1245 2045 1350" fill="none" stroke="#3e91a8" stroke-width="14"/>
+  <!-- Edge-to-edge paint prevents an empty image canvas inside the bounded overlay. -->
+  <rect width="1100" height="1350" fill="#b8dce8"/>
+  <rect width="1100" height="1350" fill="url(#waves)"/>
 
-  <g fill="none" stroke-linecap="round">
-    <path d="M340 40C470 205 650 325 820 510C1010 715 1270 970 1710 1290" stroke="#b98f57" stroke-width="24" opacity="0.7"/>
-    <path d="M85 845C430 800 780 835 1135 770C1430 715 1710 700 1985 690" stroke="#c9a775" stroke-width="20" opacity="0.78"/>
-    <path d="M990 85C1175 265 1340 450 1470 650C1585 825 1740 1030 1935 1225" stroke="#c9a775" stroke-width="18" opacity="0.78"/>
-    <path d="M100 510C505 540 900 515 1275 455C1580 405 1795 390 1960 385" stroke="#79b6c8" stroke-width="13" opacity="0.82"/>
-    <path d="M240 1085C570 1015 850 1020 1165 1045C1450 1065 1700 1025 1995 940" stroke="#d4b889" stroke-width="15" opacity="0.7"/>
-    <path d="M620 140C680 360 720 600 715 820C710 1010 750 1175 850 1320" stroke="#d4b889" stroke-width="14" opacity="0.68"/>
+  <!-- The coast follows Dumaguete's north-south shoreline; land lies west. -->
+  <path d="M0 0H770C774 95 762 177 779 252C787 330 765 405 779 480C790 555 765 620 774 690C784 758 752 818 749 885C743 958 721 1020 718 1095C714 1178 699 1260 694 1350H0Z" fill="url(#land)"/>
+  <path d="M0 0H770C774 95 762 177 779 252C787 330 765 405 779 480C790 555 765 620 774 690C784 758 752 818 749 885C743 958 721 1020 718 1095C714 1178 699 1260 694 1350H0Z" fill="url(#local-grid)"/>
+  <path d="M770 0C774 95 762 177 779 252C787 330 765 405 779 480C790 555 765 620 774 690C784 758 752 818 749 885C743 958 721 1020 718 1095C714 1178 699 1260 694 1350" fill="none" stroke="#3e91a8" stroke-width="9"/>
+
+  <!-- Principal corridors, simplified from OpenStreetMap orientation. -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M681 -25C666 105 654 220 662 335C671 454 679 568 674 681C668 790 661 908 650 1022C641 1135 630 1248 616 1375" stroke="#bd955d" stroke-width="22" opacity=".9"/>
+    <path d="M610 -10C596 115 593 236 602 350C611 466 611 586 603 700C594 817 574 930 558 1050C544 1160 526 1265 505 1365" stroke="#d0ad78" stroke-width="13"/>
+    <path d="M54 744C177 722 285 702 390 689C491 676 583 672 679 681C718 685 746 689 774 690" stroke="#c39b65" stroke-width="18"/>
+    <path d="M22 492C155 499 272 508 382 505C484 503 574 491 666 470C706 461 746 465 779 480" stroke="#d0ad78" stroke-width="13"/>
+    <path d="M126 1007C245 970 344 949 441 936C527 924 600 910 666 884C695 873 724 874 749 885" stroke="#d0ad78" stroke-width="12"/>
+    <path d="M332 86C354 199 371 314 380 431C390 547 390 667 383 785C378 899 386 1014 410 1125" stroke="#d9bf94" stroke-width="10"/>
+
+    <!-- Banica River reaches the coast immediately south of the city center. -->
+    <path d="M0 628C120 632 225 641 329 650C431 660 528 668 620 681C675 688 725 691 774 690" stroke="#70b3c8" stroke-width="12" opacity=".95"/>
+    <path d="M4 637C122 642 226 650 328 660C430 670 526 679 620 691C674 698 725 701 772 700" stroke="#dff1f5" stroke-width="3" opacity=".9"/>
   </g>
 
-  <g font-family="system-ui, sans-serif" fill="#523d28">
-    <text x="70" y="95" font-size="48" font-weight="800">DUMAGUETE CITY</text>
-    <text x="72" y="140" font-size="25">Offline barangay guide · schematic only · not for street navigation</text>
-    <text x="2165" y="545" font-size="34" font-weight="700" fill="#256b80" transform="rotate(90 2165 545)">TAÑON STRAIT</text>
-    <text x="1300" y="715" font-size="38" font-weight="800">CITY CENTER</text>
-    <text x="250" y="790" font-size="28" font-weight="700">WESTERN BARANGAYS</text>
-    <text x="1190" y="345" font-size="28" font-weight="700">NORTHERN BARANGAYS</text>
-    <text x="1370" y="1110" font-size="28" font-weight="700">SOUTHERN BARANGAYS</text>
-    <text x="1330" y="445" font-size="23" fill="#39798d">Banica River corridor</text>
-    <text x="520" y="1200" font-size="24">Approximate corridors provide orientation.</text>
-    <text x="520" y="1240" font-size="24">Use the interactive pins for barangay details.</text>
-    <text x="2100" y="1190" font-size="22" font-weight="700" fill="#256b80">COAST</text>
+  <g font-family="system-ui, sans-serif" fill="#55422f">
+    <text x="40" y="62" font-size="32" font-weight="800">DUMAGUETE CITY</text>
+    <text x="42" y="94" font-size="18">offline schematic · not for street navigation</text>
+    <text x="545" y="615" font-size="24" font-weight="800">CITY CENTER</text>
+    <text x="420" y="735" font-size="17" fill="#39798d">Banica River</text>
+    <text x="888" y="575" font-size="25" font-weight="700" fill="#256b80" transform="rotate(90 888 575)">TAÑON STRAIT</text>
+    <text x="655" y="195" font-size="16" font-weight="700" transform="rotate(86 655 195)">NATIONAL ROAD</text>
+    <text x="35" y="1315" font-size="15" fill="#5d7180">© OpenStreetMap contributors · schematic orientation only</text>
   </g>
 
-  <g transform="translate(1810 105)" font-family="system-ui, sans-serif" fill="#523d28">
-    <circle cx="44" cy="44" r="42" fill="#fbf4e7" stroke="#523d28" stroke-width="4" opacity="0.94"/>
-    <path d="M44 60L22 76L44 9L66 76Z" fill="#c41a1a"/>
-    <text x="44" y="102" text-anchor="middle" font-size="22" font-weight="800">N</text>
+  <g transform="translate(950 55)" font-family="system-ui, sans-serif" fill="#523d28">
+    <circle cx="35" cy="35" r="33" fill="#fbf4e7" stroke="#523d28" stroke-width="3"/>
+    <path d="M35 47L20 59L35 8L50 59Z" fill="#c41a1a"/>
+    <text x="35" y="86" text-anchor="middle" font-size="18" font-weight="800">N</text>
   </g>
 </svg>
