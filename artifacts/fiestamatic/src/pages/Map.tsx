@@ -3,7 +3,7 @@ import { BARANGAYS, BarangayData } from '@/data/barangays';
 import { getOrCreateFiestaDate, getDaysUntil } from '@/lib/fiesta-date';
 import { BarangayDrawer } from '@/components/BarangayDrawer';
 
-import { MapContainer, ImageOverlay, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, ImageOverlay, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -23,10 +23,50 @@ const RED_ICON    = createPinIcon('#c41a1a'); // Deep crimson red — clearly re
 const ORANGE_ICON = createPinIcon('#e87c1e'); // Warm amber-orange — clearly orange
 const YELLOW_ICON = createPinIcon('#f5c518'); // Bright golden yellow — clearly distinct
 
-const DUMAGUETE_BOUNDS: L.LatLngBoundsExpression = [
-  [9.245, 123.245],
-  [9.365, 123.345],
+const ONLINE_CENTER: L.LatLngExpression = [9.3068, 123.3054];
+const ONLINE_ZOOM = 13;
+
+// The landscape schematic is deliberately wider than the city marker extent so
+// a phone-sized viewport has useful east/west room to explore while offline.
+const OFFLINE_MAP_BOUNDS: L.LatLngBoundsLiteral = [
+  [9.245, 123.195],
+  [9.365, 123.415],
 ];
+
+function OfflineViewport({ active }: { active: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const bounds = L.latLngBounds(OFFLINE_MAP_BOUNDS);
+
+    const showOfflineMap = () => {
+      // `inside: true` chooses a cover zoom: the viewport fits inside the
+      // schematic instead of letterboxing beyond it.
+      const coverZoom = map.getBoundsZoom(bounds, true);
+      map.options.maxBoundsViscosity = 1;
+      map.setMinZoom(coverZoom);
+      map.setMaxBounds(bounds);
+      map.setView(bounds.getCenter(), coverZoom, { animate: false });
+    };
+
+    if (active) {
+      showOfflineMap();
+      map.on('resize', showOfflineMap);
+    } else {
+      map.off('resize', showOfflineMap);
+      map.setMaxBounds(undefined);
+      map.setMinZoom(0);
+      map.options.maxBoundsViscosity = 0;
+      map.setView(ONLINE_CENTER, ONLINE_ZOOM, { animate: false });
+    }
+
+    return () => {
+      map.off('resize', showOfflineMap);
+    };
+  }, [active, map]);
+
+  return null;
+}
 
 function useNetworkStatus() {
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
@@ -111,15 +151,16 @@ export default function MapPage() {
         </div>
         {isClient && (
           <MapContainer
-            center={[9.3068, 123.3054]}
-            zoom={13}
+            center={ONLINE_CENTER}
+            zoom={ONLINE_ZOOM}
             style={{ height: '100%', width: '100%', backgroundColor: 'hsl(36 50% 95%)' }}
             zoomControl={false}
           >
+            <OfflineViewport active={useOfflineMap} />
             {useOfflineMap ? (
               <ImageOverlay
                 url="/offline-map.svg"
-                bounds={DUMAGUETE_BOUNDS}
+                bounds={OFFLINE_MAP_BOUNDS}
                 opacity={1}
                 alt="Offline schematic of Dumaguete City and its coast"
                 interactive={false}
