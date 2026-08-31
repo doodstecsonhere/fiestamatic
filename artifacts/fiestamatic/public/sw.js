@@ -1,4 +1,4 @@
-// Fiestamatic Service Worker v3
+// Fiestamatic Service Worker v4
 // Auto-update strategy:
 //   install  → skipWaiting()   (new SW activates immediately, no tab-close required)
 //   activate → clients.claim() (takes control of all open tabs right away)
@@ -9,14 +9,13 @@
 //   App shell HTML  : StaleWhileRevalidate — always renders, silently refreshes
 //   JS / CSS / icons: CacheFirst          — instant after first visit
 //   Google Fonts    : CacheFirst (font cache)
-//   OSM map tiles   : CacheFirst (tile cache, capped at 500)
+//   Offline map     : bundled app asset; third-party map tiles are not cached
 //   API             : NetworkOnly         — localStorage layer handles offline
 
-const APP_CACHE  = 'fiestamatic-app-v4';
-const TILE_CACHE = 'fiestamatic-tiles-v1';
+const APP_CACHE  = 'fiestamatic-app-v5';
 const FONT_CACHE = 'fiestamatic-fonts-v1';
 
-const VALID_CACHES = new Set([APP_CACHE, TILE_CACHE, FONT_CACHE]);
+const VALID_CACHES = new Set([APP_CACHE, FONT_CACHE]);
 
 const PRECACHE_ASSETS = [
   '/',
@@ -24,6 +23,7 @@ const PRECACHE_ASSETS = [
   '/icon-192.png',
   '/icon-512.png',
   '/apple-touch-icon.png',
+  '/offline-map.svg',
 ];
 
 // ─── Install ──────────────────────────────────────────────────────────────────
@@ -83,14 +83,9 @@ self.addEventListener('fetch', (event) => {
   // 1. API — NetworkOnly (app-level localStorage handles offline)
   if (url.pathname.startsWith('/api')) return;
 
-  // 2. OSM map tiles — CacheFirst, capped at 500 entries
-  if (
-    url.hostname.endsWith('tile.openstreetmap.org') ||
-    url.hostname === 'tile.openstreetmap.org'
-  ) {
-    event.respondWith(tileStrategy(event.request));
-    return;
-  }
+  // 2. Third-party map tiles are left to the browser's normal HTTP cache.
+  // OpenStreetMap's standard tile policy forbids offline prefetch/download.
+  if (url.hostname === 'tile.openstreetmap.org') return;
 
   // 3. Google Fonts — CacheFirst (dedicated font cache)
   if (
@@ -149,27 +144,5 @@ async function networkFirstNavigation(request) {
   } catch {
     const cached = await cache.match(request) || await cache.match('/');
     return cached || new Response('Offline', { status: 503 });
-  }
-}
-
-async function tileStrategy(request) {
-  const cache = await caches.open(TILE_CACHE);
-  const cached = await cache.match(request);
-  if (cached) return cached;
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      const keys = await cache.keys();
-      if (keys.length >= 500) await cache.delete(keys[0]);
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    // Transparent 1×1 PNG so the map grid never breaks offline
-    const png = Uint8Array.from(
-      atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='),
-      (c) => c.charCodeAt(0)
-    );
-    return new Response(png, { headers: { 'Content-Type': 'image/png' } });
   }
 }

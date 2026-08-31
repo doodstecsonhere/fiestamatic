@@ -3,7 +3,7 @@ import { BARANGAYS, BarangayData } from '@/data/barangays';
 import { getOrCreateFiestaDate, getDaysUntil } from '@/lib/fiesta-date';
 import { BarangayDrawer } from '@/components/BarangayDrawer';
 
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, ImageOverlay, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -23,14 +23,43 @@ const RED_ICON    = createPinIcon('#c41a1a'); // Deep crimson red — clearly re
 const ORANGE_ICON = createPinIcon('#e87c1e'); // Warm amber-orange — clearly orange
 const YELLOW_ICON = createPinIcon('#f5c518'); // Bright golden yellow — clearly distinct
 
+const DUMAGUETE_BOUNDS: L.LatLngBoundsExpression = [
+  [9.245, 123.245],
+  [9.365, 123.345],
+];
+
+function useNetworkStatus() {
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+
 export default function MapPage() {
   const [selectedBarangay, setSelectedBarangay] = useState<BarangayData | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [tileFailed, setTileFailed] = useState(false);
+  const isOnline = useNetworkStatus();
+  const useOfflineMap = !isOnline || tileFailed;
   const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (isOnline) setTileFailed(false);
+  }, [isOnline]);
 
   const markers = useMemo(() => {
     return BARANGAYS.map(b => {
@@ -72,6 +101,14 @@ export default function MapPage() {
       </div>
 
       <div className="flex-1 w-full z-0 relative pb-[72px]">
+        <div
+          aria-live="polite"
+          className="absolute bottom-[84px] left-3 z-[401] max-w-[calc(100%-1.5rem)] rounded-xl border border-border bg-background/95 px-3 py-2 text-xs font-medium text-foreground shadow-md backdrop-blur"
+        >
+          {useOfflineMap
+            ? 'Offline barangay guide — markers and fiesta details remain available. This schematic is not for street navigation.'
+            : 'Interactive map · © OpenStreetMap contributors'}
+        </div>
         {isClient && (
           <MapContainer
             center={[9.3068, 123.3054]}
@@ -79,15 +116,30 @@ export default function MapPage() {
             style={{ height: '100%', width: '100%', backgroundColor: 'hsl(36 50% 95%)' }}
             zoomControl={false}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-            />
+            {useOfflineMap ? (
+              <ImageOverlay
+                url="/offline-map.svg"
+                bounds={DUMAGUETE_BOUNDS}
+                opacity={1}
+                alt="Offline schematic of Dumaguete City and its coast"
+                interactive={false}
+              />
+            ) : (
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                eventHandlers={{
+                  tileerror: () => setTileFailed(true),
+                }}
+              />
+            )}
             {markers.map(m => (
               <Marker
                 key={m.barangay}
                 position={[m.latitude, m.longitude]}
                 icon={m.icon}
+                title={`${m.barangay} fiesta marker`}
+                alt={`${m.barangay} fiesta marker`}
               >
                 <Popup className="fiesta-popup border-none">
                   <div className="p-0.5">
