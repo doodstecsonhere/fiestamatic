@@ -47,7 +47,10 @@ test('restores the normal online map viewport without offline constraints', () =
   assert.match(mapSource, /setView\(ONLINE_CENTER, ONLINE_ZOOM/);
 });
 
-test('keeps the map status clear of attribution on small screens', () => {
+test('shows the custom status only for the offline fallback', () => {
+  assert.match(mapSource, /\{useOfflineMap && \(/);
+  assert.doesNotMatch(mapSource, /Interactive map · © OpenStreetMap contributors/);
+  assert.match(mapSource, /Offline barangay guide — markers and fiesta details remain available/);
   assert.match(mapSource, /bottom-\[96px\][^\n]*sm:bottom-\[84px\]/);
 });
 

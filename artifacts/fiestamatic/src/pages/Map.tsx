@@ -148,14 +148,14 @@ export default function MapPage() {
       </div>
 
       <div className="flex-1 w-full z-0 relative pb-[72px]">
-        <div
-          aria-live="polite"
-          className="absolute bottom-[96px] left-3 z-[401] max-w-[calc(100%-1.5rem)] rounded-xl border border-border bg-background/95 px-3 py-2 text-xs font-medium leading-relaxed text-foreground shadow-md backdrop-blur sm:bottom-[84px]"
-        >
-          {useOfflineMap
-            ? 'Offline barangay guide — markers and fiesta details remain available. This schematic is not for street navigation.'
-            : 'Interactive map · © OpenStreetMap contributors'}
-        </div>
+        {useOfflineMap && (
+          <div
+            aria-live="polite"
+            className="absolute bottom-[96px] left-3 z-[401] max-w-[calc(100%-1.5rem)] rounded-xl border border-border bg-background/95 px-3 py-2 text-xs font-medium leading-relaxed text-foreground shadow-md backdrop-blur sm:bottom-[84px]"
+          >
+            Offline barangay guide — markers and fiesta details remain available. This schematic is not for street navigation.
+          </div>
+        )}
         {isClient && (
           <MapContainer
             center={ONLINE_CENTER}
